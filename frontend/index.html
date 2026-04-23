@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>GYM — Panel de Control</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#D4AF37">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GYM Panel">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-emblem">GYM</div>
+  <div class="login-sub">Panel de Control</div>
+  <div class="login-card">
+    <div id="auth-tabs" style="display:flex;gap:8px;margin-bottom:20px">
+      <button id="tab-btn-login" class="btn-gold" style="flex:1;padding:10px;font-size:13px" onclick="mostrarTab('login')">Iniciar sesión</button>
+      <button id="tab-btn-registro" class="btn-gold" style="flex:1;padding:10px;font-size:13px;opacity:0.4" onclick="mostrarTab('registro')">Registrarse</button>
+    </div>
+
+    <!-- Login -->
+    <div id="tab-login">
+      <div class="login-title">🔐 Acceso</div>
+      <div class="login-hint">Ingresa tus credenciales</div>
+      <div class="field-wrap">
+        <label class="field-label">Usuario</label>
+        <input id="inp-user" class="inp" type="text" placeholder="tu_gimnasio" autocomplete="username" autocorrect="off" autocapitalize="off">
+      </div>
+      <div class="field-wrap">
+        <label class="field-label">Contraseña</label>
+        <input id="inp-pass" class="inp pass" type="password" placeholder="••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-gold" id="btn-login">ENTRAR →</button>
+    </div>
+
+    <!-- Registro -->
+    <div id="tab-registro" style="display:none">
+      <div class="login-title">🏋️ Crear cuenta</div>
+      <div class="login-hint">Registra tu gimnasio</div>
+      <div class="field-wrap">
+        <label class="field-label">Nombre del Gimnasio</label>
+        <input id="reg-gimnasio" class="inp" type="text" placeholder="Gimnasio Élite">
+      </div>
+      <div class="field-wrap">
+        <label class="field-label">Usuario</label>
+        <input id="reg-usuario" class="inp" type="text" placeholder="elite_gym" autocorrect="off" autocapitalize="off">
+      </div>
+      <div class="field-wrap">
+        <label class="field-label">Contraseña</label>
+        <input id="reg-pass" class="inp pass" type="password" placeholder="Mínimo 6 caracteres">
+      </div>
+      <button class="btn-gold" onclick="registro()">CREAR CUENTA →</button>
+    </div>
+
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo" id="topbar-nombre">GYM</div>
+    <div class="topbar-right">
+      <button class="btn-sm btn-red" id="btn-logout">Salir</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="stats">📊 Stats</button>
+    <button class="tab" data-tab="clientes">👥 Clientes</button>
+    <button class="tab" data-tab="alertas">🔔 Alertas</button>
+    <button class="tab" data-tab="config">⚙️ Config</button>
+  </div>
+  <div class="body">
+    <!-- STATS -->
+    <div class="pane active" id="pane-stats">
+      <div id="stats-content"><div class="empty-state"><div class="empty-icon">📊</div>Cargando estadísticas...</div></div>
+    </div>
+    <!-- CLIENTES -->
+    <div class="pane" id="pane-clientes">
+      <div class="search-bar">
+        <input class="search-inp" id="search-inp" placeholder="🔍 Buscar cliente..." oninput="renderClientes()">
+        <button class="btn-add-cliente" onclick="abrirModalNuevo()">+ Nuevo</button>
+      </div>
+      <div class="filter-row">
+        <button class="filter-btn active" data-filter="todos" onclick="setFiltro(this,'todos')">Todos</button>
+        <button class="filter-btn f-green" data-filter="activo" onclick="setFiltro(this,'activo')">✅ Al día</button>
+        <button class="filter-btn f-yellow" data-filter="por-vencer" onclick="setFiltro(this,'por-vencer')">⚠️ Por vencer</button>
+        <button class="filter-btn f-red" data-filter="vencido" onclick="setFiltro(this,'vencido')">❌ Vencidos</button>
+      </div>
+      <div id="lista-clientes"></div>
+    </div>
+    <!-- ALERTAS -->
+    <div class="pane" id="pane-alertas">
+      <div id="alertas-content"></div>
+    </div>
+    <!-- CONFIG -->
+    <div class="pane" id="pane-config">
+      <div id="config-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO/EDITAR CLIENTE -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-titulo">NUEVO CLIENTE</div>
+    <div id="save-indicator" class="save-indicator">
+      <div class="save-dot"></div>
+      <span id="save-text">Sin cambios</span>
+    </div>
+    <div class="modal-grid">
+      <div class="form-group full">
+        <label class="form-label">Nombre completo *</label>
+        <input class="form-inp" id="f-nombre" type="text" placeholder="Ej: Juan Pérez">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cédula</label>
+        <input class="form-inp" id="f-cedula" type="text" inputmode="numeric" placeholder="123456789">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono</label>
+        <input class="form-inp" id="f-tel" type="tel" placeholder="3001234567">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Plan *</label>
+        <select class="form-inp" id="f-plan" onchange="onPlanChange()"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Valor a cobrar (COP) ✏️</label>
+        <input class="form-inp" id="f-valor" type="text" inputmode="numeric" placeholder="80000">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Fecha de inicio *</label>
+        <input class="form-inp" id="f-inicio" type="date">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Notas</label>
+        <input class="form-inp" id="f-notas" type="text" placeholder="Lesión, horario especial...">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cerrarModalCliente()">Cancelar</button>
+      <button class="btn-guardar" onclick="guardarClienteManual()">💾 GUARDAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RENOVAR -->
+<div class="modal-overlay" id="modal-renovar">
+  <div class="modal" style="max-height:60vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title">RENOVAR MEMBRESÍA</div>
+    <div id="renovar-nombre-label" style="font-size:14px;color:var(--muted);margin-bottom:16px"></div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Plan</label>
+      <select class="form-inp" id="renovar-plan"></select>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Valor cobrado (COP) ✏️</label>
+      <input class="form-inp" id="renovar-valor" type="text" inputmode="numeric" placeholder="80000">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cerrarModalRenovar()">Cancelar</button>
+      <button class="btn-guardar" onclick="confirmarRenovar()">🔄 RENOVAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="modal-overlay" id="modal-detalle">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="detalle-content"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
