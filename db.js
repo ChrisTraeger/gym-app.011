@@ -5,7 +5,6 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 })
 
-// Crear tablas si no existen
 pool.query(`
   CREATE TABLE IF NOT EXISTS usuarios (
     id         SERIAL PRIMARY KEY,
@@ -15,7 +14,6 @@ pool.query(`
     rol        TEXT    DEFAULT 'gimnasio',
     creado_en  TIMESTAMP DEFAULT NOW()
   );
-
   CREATE TABLE IF NOT EXISTS clientes (
     id           SERIAL PRIMARY KEY,
     usuario_id   INTEGER NOT NULL,
@@ -28,7 +26,6 @@ pool.query(`
     estado       TEXT    DEFAULT 'activo',
     creado_en    TIMESTAMP DEFAULT NOW()
   );
-
   CREATE TABLE IF NOT EXISTS planes (
     id            SERIAL PRIMARY KEY,
     usuario_id    INTEGER NOT NULL,
@@ -39,7 +36,6 @@ pool.query(`
 `).then(() => console.log('✅ Base de datos lista'))
   .catch(err => console.error('❌ Error DB:', err))
 
-// Compatibilidad con la API de sqlite3
 module.exports = {
   get: (sql, params, cb) => {
     if (typeof params === 'function') { cb = params; params = [] }
@@ -61,4 +57,3 @@ module.exports = {
   },
   pool
 }
-module.exports = db
